@@ -1,0 +1,1 @@
+The purpose of this project is to provide a pygame chess application centered around the goal of teaching new players Chess. One of the primary ways this is done is through a customized GPT assistent alligned to provide move suggestions and helpful explanations based on the current board state represented using FEN notation.
