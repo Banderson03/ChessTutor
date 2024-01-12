@@ -2,7 +2,7 @@ from openai import OpenAI
 import pandas as pd
 import time
 
-client = OpenAI(api_key="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")
+client = OpenAI(api_key="<INSERT API KEY> (Can't upload to github <whoops>)")
 
 
 # Creates the assistant
