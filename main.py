@@ -4,12 +4,21 @@ from stockfish import Stockfish
 import pygame
 from pygame.locals import *
 
+BACKGROUND_COLOR = (49, 46, 43)
+
 
 class Game:
     def __init__(self):
         pygame.display.set_caption("ChessTutor (Powered by GPT)")
-        self.surface = pygame.display.set_mode((1600, 900))
+        self.surface = pygame.display.set_mode((1600,900))
+        self.surface.fill(BACKGROUND_COLOR)
         self.clock = pygame.time.Clock()
+        self.image = pygame.transform.scale(pygame.image.load("ChessTutor/board.png"), (900,860))
+        self.moves = pygame.transform.scale(pygame.image.load("ChessTutor/Moves of the king.png"), (300, 300))
+        self.surface.blit(self.image, (0,0))
+        self.surface.blit(self.moves, (1000,0))
+        pygame.display.flip()
+
         # Change all of this to be a part of the game object not board
 
     def run(self):
