@@ -26,6 +26,8 @@ class Board:
         self.log = []
         self.whiteMove = True
         self.pieceDictionary= {"bR": "rook", }
+
+        self.potentialThreats = []
         
 
     
@@ -80,6 +82,7 @@ class Board:
         
     
     def rook(self):
+        # Generate all valid moves, once past 
         print("yay")
 
     def knight(self):
