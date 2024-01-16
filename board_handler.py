@@ -17,6 +17,12 @@ boardReference = [
     ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
 ]
 
+rankToRow = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
+fileToCol = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
+rowToRank = {0: "8", 1: "7", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2", 7: "1"}
+colToFile = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
+
+
 lightSquareColor = (241, 217, 181)
 darkSquareColor = (181, 136, 99)
 
@@ -29,7 +35,11 @@ class Board:
         self.loadBoard()
         self.loadPieces()
         self.log = []
-        self.whiteMove = True      
+        self.whiteMove = True
+        self.selection = ()
+        self.clickSequence = []
+        self.alteredTiles = []
+
     
     def loadBoard(self):
         tileType = True
@@ -61,31 +71,63 @@ class Board:
         pygame.display.flip()
 
 
-    def movePiece(self, move):
-        piece = self.board[move.s1Row][move.s1Col].getPiece()
-        self.board[move.s1Row][move.s1Col].setPiece("__")
-        self.board[move.s2Row][move.s2Col].setPiece(piece)
-        
-        self.log.append(move.notateMove())
+    def movePiece(self, t1, t2):
+        piece = t1.getPiece()
+        t1.setPiece("__")
+        t2.setPiece(piece)
+        move = (t1.getNotation() + t2.getNotation())
+        print(move)
+        self.log.append(move)
         self.whiteMove = not self.whiteMove
 
 
     def handleMove(self, p1, p2):
-        move = Move(p1, p2, self.board)
-        print(move.notateMove())
-        self.movePiece(move)
+        t1 = self.board[p1[0]][p1[1]]
+        t2 = self.board[p2[0]][p2[1]]
+        self.movePiece(t1, t2)
+        
 
-    
+    def resetBoardHighlighting(self):
+        for tile in self.alteredTiles:
+            self.board[tile[0]][tile[1]].resetTile()
+
+
+    def resetBoardSelections(self):
+        self.selection = ()
+        self.clickSequence = []
+        self.resetBoardHighlighting()
+
+
+    def updateSelections(self, click):
+        if self.selection == click:
+            self.resetBoardSelections
+        else:
+            self.selection = click
+            self.clickSequence.append(self.selection)
+            if len(self.clickSequence) == 2:
+                self.handleMove(self.clickSequence[0], self.clickSequence[1])
+                self.resetBoardSelections()
+                self.drawBoard()
+            else:
+                self.board[click[0]][click[1]].setColor((212, 211, 211))
+                self.alteredTiles.append((click[0], click[1]))
+                self.drawBoard()    
+
+
 
 class Tile:
     def __init__(self, x, y, piece, color, parent_surface):
-        self.file = x
-        self.rank = y
-        self.x = 32 + (100 * self.file)
-        self.y = 12 + (100 * self.rank)
+        self.col = x
+        self.row = y
+        self.file = colToFile[self.col]
+        self.rank = rowToRank[self.row]
+        self.x = 32 + (100 * self.col)
+        self.y = 12 + (100 * self.row)
         self.piece = piece
         self.surface = parent_surface
+        self.defaultColor = color
         self.color = color
+        self.mark = False
 
     def draw(self):
         tile_rect = pygame.rect.Rect(self.x, self.y, 100, 100)
@@ -93,35 +135,46 @@ class Tile:
         pygame.draw.rect(self.surface, self.color, tile_rect)
         if self.piece != "__":
             self.surface.blit(PImage[self.piece], (self.x + 2, self.y + 6))
+        if self.mark:
+            pass
         pygame.display.flip()
     
+
     def setPiece(self, piece):
         self.piece = piece
 
+
     def getPiece(self):
         return self.piece
-
-
-
-class Move:
-    rankToRow = {"8": 0, "7": 1, "6": 2, "5": 3, "4": 4, "3": 5, "2": 6, "1": 7}
-    fileToCol = {"a": 0, "b": 1, "c": 2, "d": 3, "e": 4, "f": 5, "g": 6, "h": 7}
-    rowToRank = {0: "8", 1: "7", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2", 7: "1"}
-    colToRank = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
-
-    def __init__(self, s1, s2, board):
-        self.s1Row = s1[0]
-        self.s1Col = s1[1]
-        self.s2Row = s2[0]
-        self.s2Col = s2[1]
-        self.movedPiece = board[self.s1Row][self.s1Col]
-        self.capturedPiece = board[self.s2Row][self.s2Col]
     
-    def convertCoordinates(self, row, col):
-        return (self.rowToRank[row] + self.colToRank[col])
+
+    def getNotation(self):
+        return (self.rank + self.file)
     
-    def notateMove(self):
-        return (self.convertCoordinates(self.s1Row, self.s1Col) + self.convertCoordinates(self.s2Row, self.s2Col))
+
+    def setColor(self, highlight):
+        self.color = highlight
+
+
+    def resetTile(self):
+        self.color = self.defaultColor
+        self.mark = False
+
+# class Move:
+
+#     def __init__(self, s1, s2, board):
+#         self.s1Row = s1[0]
+#         self.s1Col = s1[1]
+#         self.s2Row = s2[0]
+#         self.s2Col = s2[1]
+#         self.movedPiece = board[self.s1Row][self.s1Col]
+#         self.capturedPiece = board[self.s2Row][self.s2Col]
+    
+#     def convertCoordinates(self, row, col):
+#         return (self.rowToRank[row] + self.colToRank[col])
+    
+#     def notateMove(self):
+#         return (self.convertCoordinates(self.s1Row, self.s1Col) + self.convertCoordinates(self.s2Row, self.s2Col))
     
 
     
