@@ -72,7 +72,7 @@ class Game:
                 menu = True
                 self.reset()
 
-            clock.tick(15)
+            clock.tick(60)
 
 
 
@@ -91,15 +91,15 @@ if __name__ == "__main__":
     #     print(board.legal_moves)
     # print(board.attacks("B2"))
 
-    square = chess.parse_square("e1")
+    # square = chess.parse_square("e1")
 
-    legal_moves = list(board.legal_moves)
+    # legal_moves = list(board.legal_moves)
 
-    moves_from_square = [move for move in legal_moves if move.from_square == square]
+    # moves_from_square = [move for move in legal_moves if move.from_square == square]
 
-    moveList = [move.uci() for move in moves_from_square]
+    # moveList = [move.uci() for move in moves_from_square]
 
-    print(moveList)
+    # print(moveList)
 
     game.run()
     # Oh boy

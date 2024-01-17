@@ -6,6 +6,7 @@ from pygame.locals import *
 import chess
 
 PImage = {}
+marker = pygame.transform.scale(pygame.image.load("ChessTutor/images/marker.png"), (34, 34))
 boardReference = [
     ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
     ["bp", "bp", "bp", "bp", "bp", "bp", "bp", "bp"],
@@ -39,6 +40,7 @@ class Board:
         self.selection = ()
         self.clickSequence = []
         self.alteredTiles = []
+        self.moveList = []
 
     
     def loadBoard(self):
@@ -48,13 +50,13 @@ class Board:
             rank = []
             tileType = not tileType
             for col in range(8):
-                ref = boardReference[row][col]
+                piece = boardReference[row][col]
                 tileType = not tileType
                 if tileType:
                     color = lightSquareColor
                 else:
                     color = darkSquareColor
-                rank.append(Tile(col, row, ref, color, self.parent_surface))
+                rank.append(Tile(col, row, piece, color, self.parent_surface))
             self.board.append(rank)
             
     
@@ -72,13 +74,15 @@ class Board:
 
 
     def movePiece(self, t1, t2):
-        piece = t1.getPiece()
-        t1.setPiece("__")
-        t2.setPiece(piece)
         move = (t1.getNotation() + t2.getNotation())
-        print(move)
-        self.log.append(move)
-        self.whiteMove = not self.whiteMove
+        if move in self.moveList:
+            self.boardEngine.push(chess.Move.from_uci(move))
+            print(move)
+            self.log.append(move)
+            piece = t1.getPiece()
+            t1.setPiece("__")
+            t2.setPiece(piece)
+            self.whiteMove = not self.whiteMove
 
 
     def handleMove(self, p1, p2):
@@ -95,6 +99,7 @@ class Board:
     def resetBoardSelections(self):
         self.selection = ()
         self.clickSequence = []
+        self.moveList = []
         self.resetBoardHighlighting()
 
 
@@ -105,13 +110,39 @@ class Board:
             self.selection = click
             self.clickSequence.append(self.selection)
             if len(self.clickSequence) == 2:
-                self.handleMove(self.clickSequence[0], self.clickSequence[1])
+                t1 = self.board[self.clickSequence[0][0]][self.clickSequence[0][1]]
+                t2 = self.board[self.clickSequence[1][0]][self.clickSequence[1][1]]
+                if t1.getPiece() != "__":
+                    self.movePiece(t1, t2)
                 self.resetBoardSelections()
                 self.drawBoard()
             else:
-                self.board[click[0]][click[1]].setColor((212, 211, 211))
-                self.alteredTiles.append((click[0], click[1]))
-                self.drawBoard()    
+                self.handleSelection()
+                self.drawBoard()
+    
+    def findLegalMoves(self, tile):
+        square = chess.parse_square(tile.getNotation())
+        legal_moves = list(self.boardEngine.legal_moves)
+        moves_from_square = [move for move in legal_moves if move.from_square == square]
+        self.moveList = [move.uci() for move in moves_from_square]
+        print(self.moveList)
+
+    def handleSelection(self):
+        tile = self.board[self.selection[0]][self.selection[1]]
+        self.alteredTiles.append((self.selection[0], self.selection[1]))
+        tile.setColor((212, 211, 211))
+        if tile.getPiece() != "__": # and tile.getPiece()[0] != "b":
+            self.findLegalMoves(tile)
+            self.markMoves()
+            print("yay")
+
+    def markMoves(self):
+        for move in self.moveList:
+            col = fileToCol[move[2]]
+            row = rankToRow[move[3]]
+            self.board[row][col].markTile()
+            self.alteredTiles.append((row, col))
+        
 
 
 
@@ -135,8 +166,10 @@ class Tile:
         pygame.draw.rect(self.surface, self.color, tile_rect)
         if self.piece != "__":
             self.surface.blit(PImage[self.piece], (self.x + 2, self.y + 6))
+
         if self.mark:
-            pass
+            self.surface.blit(marker, (self.x + 33, self.y + 33))
+
         pygame.display.flip()
     
 
@@ -149,7 +182,7 @@ class Tile:
     
 
     def getNotation(self):
-        return (self.rank + self.file)
+        return (self.file + self.rank)
     
 
     def setColor(self, highlight):
@@ -159,6 +192,9 @@ class Tile:
     def resetTile(self):
         self.color = self.defaultColor
         self.mark = False
+
+    def markTile(self):
+        self.mark = True
 
 # class Move:
 
