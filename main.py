@@ -21,8 +21,6 @@ class Game:
         self.selection = ()
         self.clickSequence = []
 
-
-        pygame.draw.rect(self.surface, (255,0,0), pygame.Rect(890, 13, 2, 2))
         pygame.display.flip()
 
     def mouseHandler(self):
@@ -72,7 +70,7 @@ class Game:
                 menu = True
                 self.reset()
 
-            clock.tick(60)
+            clock.tick(15)
 
 
 
@@ -101,5 +99,6 @@ if __name__ == "__main__":
 
     # print(moveList)
 
+    # board.
     game.run()
     # Oh boy

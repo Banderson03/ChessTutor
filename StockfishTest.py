@@ -9,6 +9,6 @@ stockfish.set_skill_level(20)
 print(stockfish.get_parameters())
 
 # Setting board positions and retreiving top moves and evaluation
-stockfish.set_fen_position("rnbqkb1r/pp1p1ppp/2p1pn2/8/3P4/2N2N2/PPP1PPPP/R1BQKB1R w KQkq - 0 4")
+stockfish.set_fen_position("rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1")
 print(stockfish.get_evaluation())
-print(stockfish.get_top_moves())
+print(stockfish.get_best_move())

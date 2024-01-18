@@ -4,6 +4,7 @@ from stockfish import Stockfish
 import pygame
 from pygame.locals import *
 import chess
+import ai_handler
 
 PImage = {}
 marker = pygame.transform.scale(pygame.image.load("ChessTutor/images/marker.png"), (34, 34))
@@ -41,6 +42,8 @@ class Board:
         self.clickSequence = []
         self.alteredTiles = []
         self.moveList = []
+        self.ai_Mode = True
+        self.AI_Player = ai_handler.AI_Player()
 
     
     def loadBoard(self):
@@ -74,21 +77,74 @@ class Board:
 
 
     def movePiece(self, t1, t2):
-        move = (t1.getNotation() + t2.getNotation())
-        if move in self.moveList:
-            self.boardEngine.push(chess.Move.from_uci(move))
-            print(move)
-            self.log.append(move)
+        uci_move = (t1.getNotation() + t2.getNotation())
+        if uci_move in self.moveList or not self.whiteMove:
+            move = chess.Move.from_uci(uci_move)
             piece = t1.getPiece()
+            if self.boardEngine.is_castling(move):
+                self.handleCastling(t1, move)
+            if self.boardEngine.is_en_passant(move):
+                self.handleEnPassant()
+                pass
+            self.boardEngine.push(move)
+            # print(move)
+            self.log.append(move)
             t1.setPiece("__")
             t2.setPiece(piece)
             self.whiteMove = not self.whiteMove
+            print(self.alteredTiles)
 
-
-    def handleMove(self, p1, p2):
-        t1 = self.board[p1[0]][p1[1]]
-        t2 = self.board[p2[0]][p2[1]]
+        
+    def aiMovePiece(self):
+        self.AI_Player.setFen(self.boardEngine.fen())
+        move = self.AI_Player.getMove()
+        self.log.append(move)
+        t1 = self.board[rankToRow[move[1]]][fileToCol[move[0]]]
+        t2 = self.board[rankToRow[move[3]]][fileToCol[move[2]]]
+        
         self.movePiece(t1, t2)
+        # self.drawBoard()
+
+
+
+
+    
+    def handleCastling(self, t1, move):
+        print("cas")
+        if self.boardEngine.is_kingside_castling(move):
+            if self.whiteMove:
+                self.board[7][7].setPiece("__")
+                self.board[7][5].setPiece("wR")
+            else:
+                self.board[0][7].setPiece("__")
+                self.board[0][5].setPiece("bR")
+        else:
+            if self.whiteMove:
+                self.board[7][0].setPiece("__")
+                self.board[7][3].setPiece("wR")
+            else:
+                self.board[0][0].setPiece("__")
+                self.board[0][3].setPiece("bR")
+
+
+    def handleEnPassant(self):
+        captured_Piece = self.boardEngine.ep_square
+
+        if self.whiteMove:
+            captured_Piece -= 8
+        else:
+            captured_Piece += 8
+
+        row = 7 - (captured_Piece // 8)
+        col = captured_Piece % 8
+
+        self.board[row][col].setPiece("__")
+
+
+    # def handleMove(self, p1, p2):
+    #     t1 = self.board[p1[0]][p1[1]]
+    #     t2 = self.board[p2[0]][p2[1]]
+    #     self.movePiece(t1, t2)
         
 
     def resetBoardHighlighting(self):
@@ -101,6 +157,7 @@ class Board:
         self.clickSequence = []
         self.moveList = []
         self.resetBoardHighlighting()
+        self.alteredTiles = []
 
 
     def updateSelections(self, click):
@@ -116,6 +173,9 @@ class Board:
                     self.movePiece(t1, t2)
                 self.resetBoardSelections()
                 self.drawBoard()
+                if self.ai_Mode and not self.whiteMove:
+                    self.aiMovePiece()
+                    self.drawBoard()
             else:
                 self.handleSelection()
                 self.drawBoard()
