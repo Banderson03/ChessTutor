@@ -5,6 +5,7 @@ from stockfish import Stockfish
 import pygame
 from pygame.locals import *
 import chess
+import chess.engine
 
 BACKGROUND_COLOR = (49, 46, 43)
 gameLog = []
@@ -75,9 +76,21 @@ class Game:
 
 
 if __name__ == "__main__":
-    game = Game()
-    board = chess.Board()
 
+    game = Game()
+
+
+
+
+    # board = chess.Board()
+
+
+    # engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64bit.exe")
+    # engine.configure({"Skill": 1})
+
+    # result = engine.play(board, chess.engine.Limit(time= 0.1))
+
+    # print(result.move)
     # print(board.legal_moves)
     # move = chess.Move.from_uci("e2e4")
     # if move in board.legal_moves:
@@ -101,4 +114,6 @@ if __name__ == "__main__":
 
     # board.
     game.run()
+
+    # engine.quit()
     # Oh boy

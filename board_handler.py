@@ -43,7 +43,7 @@ class Board:
         self.alteredTiles = []
         self.moveList = []
         self.ai_Mode = True
-        self.AI_Player = ai_handler.AI_Player()
+        self.AI_Player = ai_handler.AI_Player(self.boardEngine)
 
     
     def loadBoard(self):
@@ -78,25 +78,36 @@ class Board:
 
     def movePiece(self, t1, t2):
         uci_move = (t1.getNotation() + t2.getNotation())
-        if uci_move in self.moveList or not self.whiteMove:
-            move = chess.Move.from_uci(uci_move)
+        uci_movePromote = uci_move + "q"
+      
+        if (uci_move in self.moveList) or not self.whiteMove or (uci_movePromote in self.moveList):
+
+
+            if t1.getPiece()[1] == "p" and self.handlePromotion(t1):
+                print("we in")
+                move = chess.Move.from_uci(uci_movePromote)
+            else:
+                move = chess.Move.from_uci(uci_move)
+
+                if self.boardEngine.is_castling(move):
+                    self.handleCastling(t1, move)
+                if self.boardEngine.is_en_passant(move):
+                    self.handleEnPassant()
+
+
             piece = t1.getPiece()
-            if self.boardEngine.is_castling(move):
-                self.handleCastling(t1, move)
-            if self.boardEngine.is_en_passant(move):
-                self.handleEnPassant()
-                pass
-            self.boardEngine.push(move)
+            
             # print(move)
+            self.boardEngine.push(move)
             self.log.append(move)
             t1.setPiece("__")
             t2.setPiece(piece)
             self.whiteMove = not self.whiteMove
-            print(self.alteredTiles)
+            # print(self.alteredTiles)
 
         
     def aiMovePiece(self):
-        self.AI_Player.setFen(self.boardEngine.fen())
+        # self.AI_Player.setFen(self.boardEngine.fen())
         move = self.AI_Player.getMove()
         self.log.append(move)
         t1 = self.board[rankToRow[move[1]]][fileToCol[move[0]]]
@@ -106,7 +117,15 @@ class Board:
         # self.drawBoard()
 
 
-
+    def handlePromotion(self, t1):
+        if self.whiteMove and t1.getNotation()[1] == "7":
+            t1.setPiece("wQ")
+        elif (not self.whiteMove) and t1.getNotation()[1] == "2":
+            t1.setPiece("bQ")
+        else:
+            return False
+        return True
+        
 
     
     def handleCastling(self, t1, move):
@@ -173,7 +192,7 @@ class Board:
                     self.movePiece(t1, t2)
                 self.resetBoardSelections()
                 self.drawBoard()
-                if self.ai_Mode and not self.whiteMove:
+                if (self.ai_Mode and not self.whiteMove):
                     self.aiMovePiece()
                     self.drawBoard()
             else:
