@@ -7,6 +7,10 @@ from pygame.locals import *
 import chess
 import chess.engine
 
+
+global game_over
+game_over = False
+
 BACKGROUND_COLOR = (49, 46, 43)
 gameLog = []
 
@@ -21,6 +25,10 @@ class Game:
         self.board.drawBoard()
         self.selection = ()
         self.clickSequence = []
+        # pygame.init()
+
+        # pygame.font.init()
+
 
         pygame.display.flip()
 
@@ -56,6 +64,9 @@ class Game:
                     if event.key == K_RETURN:
                         print("return")
                         menu = False
+                    if event.key == K_u:
+                        self.board.undoMove()
+                        print("u")
 
                 
                 elif event.type == QUIT:
@@ -78,11 +89,7 @@ class Game:
 if __name__ == "__main__":
 
     game = Game()
-
-
-
-
-    # board = chess.Board()
+    board = chess.Board()
 
 
     # engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64bit.exe")

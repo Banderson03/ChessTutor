@@ -5,6 +5,7 @@ import pygame
 from pygame.locals import *
 import chess
 import ai_handler
+import main
 
 PImage = {}
 marker = pygame.transform.scale(pygame.image.load("ChessTutor/images/marker.png"), (34, 34))
@@ -25,8 +26,13 @@ rowToRank = {0: "8", 1: "7", 2: "6", 3: "5", 4: "4", 5: "3", 6: "2", 7: "1"}
 colToFile = {0: "a", 1: "b", 2: "c", 3: "d", 4: "e", 5: "f", 6: "g", 7: "h"}
 
 
-lightSquareColor = (241, 217, 181)
-darkSquareColor = (181, 136, 99)
+LIGHTSQUARECOLOR = (241, 217, 181)
+DARKSQUARECOLOR = (181, 136, 99)
+LIGHTGRAYCOLOR = (148, 146, 145)
+pygame.font.init()
+font = pygame.font.SysFont("subway", 42)
+
+
 
 class Board:
     def __init__(self, parent_surface):
@@ -42,8 +48,15 @@ class Board:
         self.clickSequence = []
         self.alteredTiles = []
         self.moveList = []
-        self.ai_Mode = True
-        self.AI_Player = ai_handler.AI_Player(self.boardEngine)
+        self.ai_Mode = False
+        self.capturedWhitePieces = []
+        self.capturedBlackPieces = []
+        self.boardHistory = []
+        # self.capturedBlackPieces.append("bR")
+        # self.capturedWhitePieces.append("wR")
+        # self.capturedBlackPieces.append("bQ")
+        # self.capturedWhitePieces.append("wQ")
+        # self.AI_Player = ai_handler.AI_Player(self.boardEngine)
 
     
     def loadBoard(self):
@@ -56,9 +69,10 @@ class Board:
                 piece = boardReference[row][col]
                 tileType = not tileType
                 if tileType:
-                    color = lightSquareColor
+                    color = LIGHTSQUARECOLOR
+
                 else:
-                    color = darkSquareColor
+                    color = DARKSQUARECOLOR
                 rank.append(Tile(col, row, piece, color, self.parent_surface))
             self.board.append(rank)
             
@@ -68,20 +82,65 @@ class Board:
         for key in pieceKeys:
             PImage[key] = pygame.transform.scale(pygame.image.load("ChessTutor/images/" + key + ".png"), (96, 96))
 
+    def drawBoardLabels(self):
+        for num in range(8):
+            self.parent_surface.blit(font.render(chr(ord('a') + num), True,  LIGHTGRAYCOLOR), (75 + (100 * num), 820))
+            self.parent_surface.blit(font.render(chr(ord('8') - num), True, LIGHTGRAYCOLOR), (6, 50 + (100 * num)))
+
+        # fileText = font.render("a                      b", True, (148, 146, 145))
+        # fileLabel = fileText.get_rect()
+        # fileLabel.center = ((100,830))
+        # self.parent_surface.blit(fileText, fileLabel)
 
     def drawBoard(self):
         for row in range(8):
             for col in range(8):               
                 self.board[row][col].draw()
+        self.drawBoardLabels()
+        self.drawCapturedPieces()
+        # print(self.captured_Pieces)
         pygame.display.flip()
+
+    def drawCapturedPieces(self):
+        piecesRect = pygame.rect.Rect(836, 12, 37, 800)
+        # pygame.draw.rect(self.parent_surface, LIGHTGRAYCOLOR, piecesRect, 2)
+
+        for piece in range(len(self.capturedWhitePieces)):
+            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedWhitePieces[piece]], (30, 30)), (834, 12 + (26 * piece)))
+
+        for piece in range(len(self.capturedBlackPieces)):
+            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedBlackPieces[piece]], (30, 30)), (834, 780 - (26 * piece)))
+
+
+    def saveBoard(self):
+        snapshot = []
+        for row in range(8):
+            tRow = []
+            for col in range(8):
+                tRow.append(self.board[row][col].getPiece())
+            snapshot.append(tRow)
+        self.boardHistory.append(snapshot)
+
+    def undoMove(self):
+        if len(self.boardHistory) != 0:
+            self.boardEngine.pop()
+            boardSnapshot = self.boardHistory.pop()
+            self.resetBoardSelections()
+            # print(boardSnapshot)
+            for row in range(8):
+                for col in range(8):
+                    self.board[row][col].setPiece(boardSnapshot[row][col])
+            self.whiteMove = not self.whiteMove
+            self.drawBoard()
 
 
     def movePiece(self, t1, t2):
         uci_move = (t1.getNotation() + t2.getNotation())
         uci_movePromote = uci_move + "q"
       
-        if (uci_move in self.moveList) or not self.whiteMove or (uci_movePromote in self.moveList):
+        if (uci_move in self.moveList) or (not self.whiteMove and self.ai_Mode) or (uci_movePromote in self.moveList):
 
+            self.saveBoard()
 
             if t1.getPiece()[1] == "p" and self.handlePromotion(t1):
                 print("we in")
@@ -98,6 +157,18 @@ class Board:
             piece = t1.getPiece()
             
             # print(move)
+            if (self.boardEngine.is_capture(move)):
+                if not self.boardEngine.is_en_passant(move):
+                    if t2.getPiece()[0] == "w":
+                        self.capturedWhitePieces.append(t2.getPiece())
+                    else:
+                        self.capturedBlackPieces.append(t2.getPiece())
+                if self.whiteMove:
+                    self.capturedBlackPieces.append("bp")
+                else:
+                    self.capturedWhitePieces.append("wp")
+
+            
             self.boardEngine.push(move)
             self.log.append(move)
             t1.setPiece("__")
@@ -226,6 +297,7 @@ class Board:
 
 
 class Tile:
+
     def __init__(self, x, y, piece, color, parent_surface):
         self.col = x
         self.row = y
