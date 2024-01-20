@@ -68,6 +68,9 @@ class Game:
                     if event.key == K_u:
                         self.board.undoMove()
                         print("u")
+                    if event.key == K_i:
+                        self.board.invertBoard()
+                        print("i")
 
                 
                 elif event.type == QUIT:

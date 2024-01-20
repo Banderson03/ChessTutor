@@ -14,7 +14,7 @@ class AI_Player:
         self.engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64bit.exe")
         self.engine.configure({"Skill": 1})
 
-
+    # Use try catches to find the right komodo (if they are using the mac or linux one)
 
     # def setFen(self, fen):
     #     self.fen = fen

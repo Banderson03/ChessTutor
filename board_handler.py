@@ -168,7 +168,11 @@ class Board:
 
 
     def invertBoard(self):
-        self.whiteMove = not self.whiteMove
+        # self.whiteMove = not self.whiteMove
+        self.aiTurn = not self.aiTurn
+        if self.aiTurn and self.ai_Mode:
+            self.aiMovePiece()
+            self.drawBoard()
 
     def movePiece(self, t1, t2):
         uci_move = (t1.getNotation() + t2.getNotation())
@@ -217,6 +221,7 @@ class Board:
     def aiMovePiece(self):
         # self.AI_Player.setFen(self.boardEngine.fen())
         move = self.AI_Player.getMove()
+        print("AI" + move)
         self.log.append(move)
         t1 = self.board[rankToRow[move[1]]][fileToCol[move[0]]]
         t2 = self.board[rankToRow[move[3]]][fileToCol[move[2]]]
