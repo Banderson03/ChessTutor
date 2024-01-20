@@ -27,3 +27,6 @@ class AI_Player:
         result = str(result)
         print(result)
         return result
+    
+    def quitEngine(self):
+        self.engine.quit()

@@ -60,6 +60,7 @@ class Game:
 
                 elif event.type == KEYDOWN:
                     if event.key == K_ESCAPE:
+                        self.board.quitAiEngine()
                         running = False
                     if event.key == K_RETURN:
                         print("return")
@@ -71,6 +72,7 @@ class Game:
                 
                 elif event.type == QUIT:
                     print("quit")
+                    self.board.quitAiEngine()
                     running = False
             try:
                 if not menu:
@@ -121,6 +123,7 @@ if __name__ == "__main__":
 
     # board.
     game.run()
+    
 
     # engine.quit()
     # Oh boy

@@ -48,16 +48,20 @@ class Board:
         self.clickSequence = []
         self.alteredTiles = []
         self.moveList = []
-        self.ai_Mode = False
+        self.ai_Mode = True
         self.capturedWhitePieces = []
         self.capturedBlackPieces = []
         self.boardHistory = []
+        self.aiTurn = False
         # self.capturedBlackPieces.append("bR")
         # self.capturedWhitePieces.append("wR")
         # self.capturedBlackPieces.append("bQ")
         # self.capturedWhitePieces.append("wQ")
-        # self.AI_Player = ai_handler.AI_Player(self.boardEngine)
+        self.AI_Player = ai_handler.AI_Player(self.boardEngine)
 
+
+    def quitAiEngine(self):
+        self.AI_Player.quitEngine()
     
     def loadBoard(self):
         tileType = True
@@ -101,15 +105,17 @@ class Board:
         # print(self.captured_Pieces)
         pygame.display.flip()
 
+
+
     def drawCapturedPieces(self):
         piecesRect = pygame.rect.Rect(836, 12, 37, 800)
-        # pygame.draw.rect(self.parent_surface, LIGHTGRAYCOLOR, piecesRect, 2)
+        pygame.draw.rect(self.parent_surface, (149, 46, 43), piecesRect)
 
         for piece in range(len(self.capturedWhitePieces)):
-            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedWhitePieces[piece]], (30, 30)), (834, 12 + (26 * piece)))
+            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedWhitePieces[piece][0]], (30, 30)), (834, 12 + (26 * piece)))
 
         for piece in range(len(self.capturedBlackPieces)):
-            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedBlackPieces[piece]], (30, 30)), (834, 780 - (26 * piece)))
+            self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedBlackPieces[piece][0]], (30, 30)), (834, 780 - (26 * piece)))
 
 
     def saveBoard(self):
@@ -122,7 +128,8 @@ class Board:
         self.boardHistory.append(snapshot)
 
     def undoMove(self):
-        if len(self.boardHistory) != 0:
+        turn = len(self.boardHistory)
+        if turn != 0:
             self.boardEngine.pop()
             boardSnapshot = self.boardHistory.pop()
             self.resetBoardSelections()
@@ -130,15 +137,44 @@ class Board:
             for row in range(8):
                 for col in range(8):
                     self.board[row][col].setPiece(boardSnapshot[row][col])
+            
+            try:
+                bP = self.capturedBlackPieces[len(self.capturedBlackPieces) - 1][1]
+                print(bP)
+                print(turn)
+                if bP == turn:
+                    print(self.capturedBlackPieces)
+                    self.capturedBlackPieces.pop()   
+                    print(self.capturedBlackPieces)
+            except:
+                pass
+
+            try:
+                wP = self.capturedWhitePieces[len(self.capturedWhitePieces) - 1][1]
+                print(wP)
+                print(turn)
+                if wP == turn:
+                    print(self.capturedWhitePieces)
+                    self.capturedWhitePieces.pop()   
+                    print(self.capturedWhitePieces)
+            except:
+                pass
+
             self.whiteMove = not self.whiteMove
+            self.aiTurn = not self.aiTurn
+            if self.aiTurn and self.ai_Mode:
+                self.undoMove()
             self.drawBoard()
 
+
+    def invertBoard(self):
+        self.whiteMove = not self.whiteMove
 
     def movePiece(self, t1, t2):
         uci_move = (t1.getNotation() + t2.getNotation())
         uci_movePromote = uci_move + "q"
       
-        if (uci_move in self.moveList) or (not self.whiteMove and self.ai_Mode) or (uci_movePromote in self.moveList):
+        if (uci_move in self.moveList) or (self.aiTurn and self.ai_Mode) or (uci_movePromote in self.moveList):
 
             self.saveBoard()
 
@@ -160,20 +196,21 @@ class Board:
             if (self.boardEngine.is_capture(move)):
                 if not self.boardEngine.is_en_passant(move):
                     if t2.getPiece()[0] == "w":
-                        self.capturedWhitePieces.append(t2.getPiece())
+                        self.capturedWhitePieces.append((t2.getPiece(), len(self.boardHistory)))
                     else:
-                        self.capturedBlackPieces.append(t2.getPiece())
-                if self.whiteMove:
-                    self.capturedBlackPieces.append("bp")
+                        self.capturedBlackPieces.append((t2.getPiece(), len(self.boardHistory)))
                 else:
-                    self.capturedWhitePieces.append("wp")
+                    if self.whiteMove:
+                        self.capturedBlackPieces.append(("bp", len(self.boardHistory)))
+                    else:
+                        self.capturedWhitePieces.append(("wp", len(self.boardHistory)))
 
-            
             self.boardEngine.push(move)
             self.log.append(move)
             t1.setPiece("__")
             t2.setPiece(piece)
             self.whiteMove = not self.whiteMove
+            self.aiTurn = not self.aiTurn
             # print(self.alteredTiles)
 
         
@@ -263,7 +300,7 @@ class Board:
                     self.movePiece(t1, t2)
                 self.resetBoardSelections()
                 self.drawBoard()
-                if (self.ai_Mode and not self.whiteMove):
+                if (self.aiTurn and self.ai_Mode):
                     self.aiMovePiece()
                     self.drawBoard()
             else:
