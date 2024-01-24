@@ -48,7 +48,7 @@ class Board:
         self.clickSequence = []
         self.alteredTiles = []
         self.moveList = []
-        self.ai_Mode = True
+        self.ai_Mode = False
         self.capturedWhitePieces = []
         self.capturedBlackPieces = []
         self.boardHistory = []
@@ -86,11 +86,29 @@ class Board:
         for key in pieceKeys:
             PImage[key] = pygame.transform.scale(pygame.image.load("ChessTutor/images/" + key + ".png"), (96, 96))
 
-    def drawBoardLabels(self):
+    def drawBoardUI(self):
         for num in range(8):
             self.parent_surface.blit(font.render(chr(ord('a') + num), True,  LIGHTGRAYCOLOR), (75 + (100 * num), 820))
             self.parent_surface.blit(font.render(chr(ord('8') - num), True, LIGHTGRAYCOLOR), (6, 50 + (100 * num)))
 
+        moveRect = pygame.rect.Rect(30, 855, 165, 50)
+        pygame.draw.rect(self.parent_surface, (49, 46, 43), moveRect)
+
+        # moveRectBorder = pygame.rect.Rect(30, 855, 165, 50)
+        # pygame.draw.rect(self.parent_surface, (149, 46, 43), moveRectBorder, 3)
+
+        if self.whiteMove:
+            self.parent_surface.blit(font.render("White Turn", True, (255, 255, 255)), (40, 865))
+        else:
+            self.parent_surface.blit(font.render("Black Turn", True, (0, 0, 0)), (40, 865))
+
+        evaluation = self.AI_Player.getAnalysis()
+
+        if evaluation['type'] == "cp":
+            centipawn_advantage = evaluation['value']
+            print(centipawn_advantage)
+            self.parent_surface.blit(font.render("Advantage:  " + str(centipawn_advantage), True, (255, 255, 255)), (600, 865))
+        
         # fileText = font.render("a                      b", True, (148, 146, 145))
         # fileLabel = fileText.get_rect()
         # fileLabel.center = ((100,830))
@@ -100,7 +118,7 @@ class Board:
         for row in range(8):
             for col in range(8):               
                 self.board[row][col].draw()
-        self.drawBoardLabels()
+        self.drawBoardUI()
         self.drawCapturedPieces()
         # print(self.captured_Pieces)
         pygame.display.flip()
@@ -109,7 +127,7 @@ class Board:
 
     def drawCapturedPieces(self):
         piecesRect = pygame.rect.Rect(836, 12, 37, 800)
-        pygame.draw.rect(self.parent_surface, (149, 46, 43), piecesRect)
+        pygame.draw.rect(self.parent_surface, (49, 46, 43), piecesRect)
 
         for piece in range(len(self.capturedWhitePieces)):
             self.parent_surface.blit(pygame.transform.scale(PImage[self.capturedWhitePieces[piece][0]], (30, 30)), (834, 12 + (26 * piece)))
@@ -164,6 +182,7 @@ class Board:
             self.aiTurn = not self.aiTurn
             if self.aiTurn and self.ai_Mode:
                 self.undoMove()
+            self.AI_Player.getAnalysis()
             self.drawBoard()
 
 
@@ -215,6 +234,8 @@ class Board:
             t2.setPiece(piece)
             self.whiteMove = not self.whiteMove
             self.aiTurn = not self.aiTurn
+            self.AI_Player.getAnalysis()
+
             # print(self.alteredTiles)
 
         
