@@ -12,6 +12,7 @@ global game_over
 game_over = False
 
 BACKGROUND_COLOR = (49, 46, 43)
+
 gameLog = []
 
 
@@ -25,12 +26,35 @@ class Game:
         self.board.drawBoard()
         self.selection = ()
         self.clickSequence = []
+        self.drawSelector()
         # pygame.init()
 
         # pygame.font.init()
 
+        # 3 buttons at bottom, 880 start giving 720 room , 720 / 3 = 240 per button
+        # Selected button gets set to background color and given white text, the menu above will be background color with border
+        # Non selected buttons will be light tile color with black text
 
+        pygame.draw.rect(self.surface, board_handler.DARKSQUARECOLOR, pygame.rect.Rect(868, 12, 720, 888), 10, border_radius=16)
+
+
+        
         pygame.display.flip()
+
+
+    def drawSelector(self):
+        # 3 option buttons
+        pygame.draw.rect(self.surface, BACKGROUND_COLOR, pygame.rect.Rect(870, 810, 240, 82))
+        pygame.draw.rect(self.surface, (241, 217, 181), pygame.rect.Rect(1108, 810, 240, 82))
+        pygame.draw.rect(self.surface, BACKGROUND_COLOR, pygame.rect.Rect(1348, 810, 238, 82))
+
+        # Vertical Dividers
+        pygame.draw.rect(self.surface, board_handler.DARKSQUARECOLOR, pygame.rect.Rect(1343, 810, 10, 82))
+        pygame.draw.rect(self.surface, board_handler.DARKSQUARECOLOR, pygame.rect.Rect(1103, 810, 10, 82))
+
+        # Horizontal Divider
+        pygame.draw.rect(self.surface, board_handler.DARKSQUARECOLOR, pygame.rect.Rect(868, 800, 720, 10))
+
 
     def mouseHandler(self):
         x, y = pygame.mouse.get_pos()

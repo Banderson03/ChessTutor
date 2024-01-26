@@ -48,7 +48,7 @@ class Board:
         self.clickSequence = []
         self.alteredTiles = []
         self.moveList = []
-        self.ai_Mode = False
+        self.ai_Mode = True
         self.capturedWhitePieces = []
         self.capturedBlackPieces = []
         self.boardHistory = []
@@ -91,8 +91,7 @@ class Board:
             self.parent_surface.blit(font.render(chr(ord('a') + num), True,  LIGHTGRAYCOLOR), (75 + (100 * num), 820))
             self.parent_surface.blit(font.render(chr(ord('8') - num), True, LIGHTGRAYCOLOR), (6, 50 + (100 * num)))
 
-        moveRect = pygame.rect.Rect(30, 855, 165, 50)
-        pygame.draw.rect(self.parent_surface, (49, 46, 43), moveRect)
+        pygame.draw.rect(self.parent_surface, DARKSQUARECOLOR, pygame.rect.Rect(30, 855, 165, 58), border_radius=8)
 
         # moveRectBorder = pygame.rect.Rect(30, 855, 165, 50)
         # pygame.draw.rect(self.parent_surface, (149, 46, 43), moveRectBorder, 3)
@@ -103,11 +102,17 @@ class Board:
             self.parent_surface.blit(font.render("Black Turn", True, (0, 0, 0)), (40, 865))
 
         evaluation = self.AI_Player.getAnalysis()
+        pygame.draw.rect(self.parent_surface, DARKSQUARECOLOR, pygame.rect.Rect(590, 855, 242, 58), border_radius=8)
+
 
         if evaluation['type'] == "cp":
             centipawn_advantage = evaluation['value']
-            print(centipawn_advantage)
-            self.parent_surface.blit(font.render("Advantage:  " + str(centipawn_advantage), True, (255, 255, 255)), (600, 865))
+            # centipawn_advantage = int(centipawn_advantage)
+            centipawn_advantage = centipawn_advantage / 100
+            if centipawn_advantage < 0:
+                self.parent_surface.blit(font.render("Advantage: " + str(centipawn_advantage), True, (0, 0, 0)), (596, 865))
+            else:
+                self.parent_surface.blit(font.render("Advantage: " + str(centipawn_advantage), True, (255, 255, 255)), (596, 865))
         
         # fileText = font.render("a                      b", True, (148, 146, 145))
         # fileLabel = fileText.get_rect()
@@ -126,7 +131,7 @@ class Board:
 
 
     def drawCapturedPieces(self):
-        piecesRect = pygame.rect.Rect(836, 12, 37, 800)
+        piecesRect = pygame.rect.Rect(836, 12, 32, 800)
         pygame.draw.rect(self.parent_surface, (49, 46, 43), piecesRect)
 
         for piece in range(len(self.capturedWhitePieces)):
