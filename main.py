@@ -6,6 +6,7 @@ import pygame
 from pygame.locals import *
 import chess
 import chess.engine
+import sys
 
 
 global game_over
@@ -19,7 +20,10 @@ gameLog = []
 class Game:
     def __init__(self):
         pygame.display.set_caption("ChessTutor (Powered by GPT)")
-        self.surface = pygame.display.set_mode((1600,900))
+        if sys.platform.startswith('win32'):
+            self.surface = pygame.display.set_mode((1600,900))
+        else:
+            self.surface = pygame.display.set_mode((1600,900), pygame.FULLSCREEN)
         self.surface.fill(BACKGROUND_COLOR)
         self.clock = pygame.time.Clock()
         self.board = board_handler.Board(self.surface)

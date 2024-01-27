@@ -6,16 +6,24 @@ import pygame
 from pygame.locals import *
 import chess
 import chess.engine
+import sys
 
 
 class AI_Player:
     def __init__(self, board):
         self.board = board
-        self.engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64bit.exe")
+
+
+        if sys.platform.startswith('win32'):
+            self.engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64bit.exe")
+            self.stockfish = Stockfish(path="ChessTutor/stockfish/stockfish-windows-x86-64-avx2.exe")
+        else:
+            self.engine = chess.engine.SimpleEngine.popen_uci("ChessTutor/komodo-14.1-64-osx")
+            self.stockfish = Stockfish(path="ChessTutor/stockfish")
+
+
         self.engine.configure({"Skill": 1})
         # print(self.engine.analyse(self.board, chess.engine.Limit(time = 0.1)))
-
-        self.stockfish = Stockfish(path="ChessTutor\stockfish\stockfish-windows-x86-64-avx2.exe")
         self.getAnalysis()
 
 
